@@ -1,0 +1,60 @@
+metadata:
+  description: "Prompts for generating readme files for generated code"
+  version: "1.0.0"
+  author: "Classroom CLI Agent"
+  task_type: "readme_generation"
+
+variants:
+  default:
+    description: "Standard readme generation prompt"
+    template: |
+      You are a senior software engineer. Write a single readme based on the target Python module.
+      Follow the plan.
+      Return ONLY the full readme content.
+      Rules:
+      - Return ONLY raw Markdown, no Python code or explanations
+      - Output raw Markdown only
+      - No Python code
+      - No code fences
+
+      TARGET MODULE PATH: {module_path}
+      Readme Path: README.md
+
+      PLAN:
+      {plan}
+
+  detailed:
+    description: "Generate a detailed readme with sections"
+    template: |
+      You are a senior software architect. Create a thorough and detailed readme based on the target module Python module and implementation plan.
+      
+      Target Module Path: {module_path}
+      Readme Path: README.md
+
+      Implementation Plan:
+      {plan}
+      
+      Standards:
+      - Include sections: Overview, Installation, Usage, API Reference, Examples, Testing, Contributing, License
+      - Use markdown formatting for sections and code snippets
+      - Provide clear instructions and examples
+      - Return ONLY raw Markdown, no Python code or explanations
+
+
+
+  minimal:
+    description: "Generate a minimal readme alongside the code"
+    template: |
+      You are a software engineer. Create a concise and minimal readme for the given Python module.
+      
+      Python Module Path: {module_path}
+      Readme Path: README.md
+
+      Implementation Plan:
+      {plan}
+      
+      Standards:
+      - Include only essential sections: Overview, Usage, API Reference
+      - Use markdown formatting for sections and code snippets
+      
+
