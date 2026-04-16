@@ -126,7 +126,7 @@ class Agent:
         Constraints:
         - Keep the solution minimal and readable
         - Assume standard library only unless the description requires otherwise
-        - Do not write code yet
+        - Only write code for function signitures
         - Output plain text only
 
         ONLY RESPOND IN THE FOLLOWING FORMAT:
