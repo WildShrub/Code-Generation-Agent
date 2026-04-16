@@ -25,6 +25,7 @@ class Agent:
     def _log(self, message: Any) -> None:
         if self.cfg.verbose:
             print(message)
+        self.tools.write("log.txt", message)
 
     def _llm(self) -> OllamaLLM:
         return OllamaLLM(
@@ -115,69 +116,147 @@ class Agent:
         5) Self-Review Agent: run tests
             5.1) potentially give revision instructions
             5.2) repeat
-        6) 
+        
         """
         run = self._multi_step_chain()
+
         # Plan
-        p1 = self.prompt_manager.get_prompt(    #modify prompt manager to get a different prompt
-            'planning',
-            self.planning_variant,
-            desc=desc,
-            module_path=module_path
-        )
+        p1 = f"""You are a senior software engineer. Create a short, actionable implementation plan with ordered steps.
+      
+        Constraints:
+        - Keep the solution minimal and readable
+        - Assume standard library only unless the description requires otherwise
+        - Do not write code yet
+        - Output plain text only
+
+        ONLY RESPOND IN THE FOLLOWING FORMAT:
+        (file_name_one.py), (file_name_two.py), (file_name_three.py), (etc.)
+        $$$$
+        (High level description of file_name_one.py)
+        $$$
+        (file_name_one.py) function signitures:
+
+            (function signiture with type hints)
+            Function Description:
+            (description of what the above function should do)
+            
+
+            (function signiture with type hints)
+            Function Description:
+            (description of what the above function should do)
+
+
+            (function signiture with type hints)
+            Function Description:
+            (description of what the above function should do)
+
+
+            (etc..)
+
+        $$$$
+        (High level description of file_name_two.py)
+        $$$
+        (file_name_two.py) Function Signitures:
+
+            (function signiture with type hints)
+            Function Description:
+            (description of what the above function should do)
+            
+
+            (function signiture with type hints)
+            Function Description:
+            (description of what the above function should do)
+
+
+            (function signiture with type hints)
+            Function Description:
+            (description of what the above function should do)
+
+
+            (etc..)
+
+        $$$$
+        (High level description of file_name_three.py)
+        $$$
+        (file_name_three.py) Function Signitures:
+
+            (function signiture with type hints)
+            Function Description:
+            (description of what the above function should do)
+            
+
+            (function signiture with type hints)
+            Function Description:
+            (description of what the above function should do)
+
+
+            (function signiture with type hints)
+            Function Description:
+            (description of what the above function should do)
+
+
+            (etc..)
+
+        $$$$
+        (etc...)
+       ------------------END OF FORMAT----------------------
+    
+      
+      
+      TARGET MODULE PATH: {module_path}
+
+      DESCRIPTION:
+      {desc}"""
+
         self._log(p1)
         plan = run(p1).strip()
         if not plan:
             return RunResult(False, "Model returned empty plan.")
         
-        end_of_file_name_list = plan.find("$")
-        
         
         unparsed_file_plan_list = plan.split("$$$$")
-        file_name_list = unparsed_file_plan_list.pop(0).split("-")
+        file_name_list = unparsed_file_plan_list.pop(0).split(", ")
         
         for i in range(len(unparsed_file_plan_list)):
             
             file_name = file_name_list[i]
             unparsed_file_plan = unparsed_file_plan_list[i].split("$$$")   #separates file description from function stuff
             file_description = unparsed_file_plan.pop(0)
-            functions_plans_string = unparsed_file_plan[0]              #should be the only thing in that list
+            function_plans_string = unparsed_file_plan[0]              #should be the only thing in that list
 
-            """
+            p2 =  f"""
+            You are a software engineer. Write a single Python module that satisfies the description.
+            Follow the plan.
+            All function signitures should be identical to the function signitures given
+            Return ONLY the full module content.
+            Rules:
+            - Output raw Python only
+            - No Markdown
+            - No code fences
+            - No explanations
+
+            TARGET MODULE PATH: 
+            {module_path}
+
+            PLAN:
+            {file_description}
+            FUNCTION SIGNITURES AND DESCRIPTIONS:
+            {function_plans_string}
             
             """
+
             # Draft code
-            p2 = self.prompt_manager.get_prompt(        
-                'multi_file_generation',
-                self.multi_file_gen_variant,
-                desc=desc,
-                module_path=(module_path + file_name),
-                plan=plan
-            )
             self._log(p2)
             draft_code_raw = run(p2)
             self._log(draft_code_raw)
             draft_code = strip_code_fences(draft_code_raw)
             if not draft_code.strip():
                 return RunResult(False, "Model returned empty module draft.")
-            
+            self.tools.write(file_name, draft_code.rstrip() + "\n")
 
 
 
 
-            
-
-
-
-    def plan_architecture(self, desc: str, module_path: str) -> RunResult:
-        "run a prompt to create instructions for individual files"
-        "split those prompts to create separate prompts that are logged as files in the prompt folder"
-        "run a loop running those prompts"
-
-
-
-
-    
 
     def commit_and_push(self, message: str, push: bool) -> RunResult:
         ok, out = self.tools.git_commit(message)
