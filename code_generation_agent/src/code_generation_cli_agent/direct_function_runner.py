@@ -21,7 +21,7 @@ print(f"Repository: {repo}")
 
 
 
-module = 'src/main.py'                             #Sets default module path if not provided
+module = 'src/'                             #Sets default module path if not provided
 print(f"Module: {module}")
 repo_path = Path(repo)
 if not repo_path.exists():

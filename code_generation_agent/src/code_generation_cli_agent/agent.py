@@ -219,13 +219,16 @@ class Agent:
         
         unparsed_file_plan_list = plan.split("$$$$")
         file_name_list = unparsed_file_plan_list.pop(0).split(", ")
-        
+        #print(file_name_list)
+        #print(len(file_name_list))
+        #print(len(unparsed_file_plan_list))
         for i in range(len(unparsed_file_plan_list)):
-            
-            file_name = file_name_list[i]
+            print("i = ",i)
+            file_name = file_name_list[i].replace("\n", "") #sanitizing the file name because the last one tends to have \n at the end of it.
             unparsed_file_plan = unparsed_file_plan_list[i].split("$$$")   #separates file description from function stuff
             file_description = unparsed_file_plan.pop(0)
             function_plans_string = unparsed_file_plan[0]              #should be the only thing in that list
+            #file_path = f"{module_path}{file_name}"
 
             p2 =  f"""
             You are a software engineer. Write a single Python module that satisfies the description.
@@ -240,7 +243,7 @@ class Agent:
             - No explanations
 
             TARGET MODULE PATH: 
-            {module_path}
+            {file_name}
 
             PLAN:
             {file_description}
@@ -257,7 +260,7 @@ class Agent:
             if not draft_code.strip():
                 return RunResult(False, "Model returned empty module draft.")
             self.tools.write(file_name, draft_code.rstrip() + "\n")
-            return RunResult(True, f"Wrote modules: {file_name_list}")
+        return RunResult(True, f"Wrote modules: {file_name_list}")
 
 
 
