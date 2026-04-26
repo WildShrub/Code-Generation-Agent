@@ -6,7 +6,7 @@ from typing import Any, Callable
 from .llm import OllamaLLM
 from .prompt_manager import PromptManager
 from .tools import Tools
-from .types import AgentConfig, RunResult
+from .new_file_name_so_it_works import AgentConfig, RunResult
 from .utils import strip_code_fences
 
 class Agent:
@@ -21,11 +21,14 @@ class Agent:
         self.code_gen_variant = 'default'
         self.readme_gen_variant = 'default'
         self.multi_file_gen_variant = 'default'
+        self.log_number = 1
 
     def _log(self, message: Any) -> None:
         if self.cfg.verbose:
             print(message)
-        self.tools.write("log.txt", message)
+        name_of_log = f"log{self.log_number}.txt"
+        self.tools.write(name_of_log, message)
+        self.log_number += 1
 
     def _llm(self) -> OllamaLLM:
         return OllamaLLM(
@@ -128,6 +131,7 @@ class Agent:
         - Assume standard library only unless the description requires otherwise
         - Only write code for function signitures
         - Output plain text only
+        - Do NOT wrap the response in ```python
 
         ONLY RESPOND IN THE FOLLOWING FORMAT:
         (file_name_one.py), (file_name_two.py), (file_name_three.py), (etc.)
@@ -201,8 +205,7 @@ class Agent:
         (etc...)
        ------------------END OF FORMAT----------------------
     
-      
-      
+
       TARGET MODULE PATH: {module_path}
 
       DESCRIPTION:
@@ -233,6 +236,7 @@ class Agent:
             - Output raw Python only
             - No Markdown
             - No code fences
+            - Always respond with ONLY the raw code. Do NOT wrap it in ```python
             - No explanations
 
             TARGET MODULE PATH: 
@@ -253,6 +257,7 @@ class Agent:
             if not draft_code.strip():
                 return RunResult(False, "Model returned empty module draft.")
             self.tools.write(file_name, draft_code.rstrip() + "\n")
+            return RunResult(True, f"Wrote modules: {file_name_list}")
 
 
 

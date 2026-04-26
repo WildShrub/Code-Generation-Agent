@@ -9,7 +9,7 @@ from pathlib import Path
 
 from .agent import Agent
 from .llm import OllamaLLM
-from .types import AgentConfig
+from .new_file_name_so_it_works import AgentConfig
 from .utils import ensure_repo_path
 
 DEFAULT_MODEL = "devstral-small-2:24b-cloud"

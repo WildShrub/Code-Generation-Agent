@@ -1,0 +1,51 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Anaconda / Conda
+conda/
+anaconda3/
+envs/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific - Output folder (very important for your case)
+output/
+__output__/
+generated/
+*_generated/
+
+# Logs
+*.log
+logs/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+
+# Python packaging artifacts
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
