@@ -1,0 +1,85 @@
+add RAG that explains why you would want to use each coding pattern and architecture, as well as an example template for each one.
+
+If we were only looking at general coding practices, then I would do something along the lines of:
+
+These are the best coding practices for python class making
+goal: create a class called Class_Name with variables x, y, z, and name.
+
+example:
+
+class Class_Name:
+    def __init__(self, name: str, x: str, y: int, z: str):
+        self.name = name
+        self.x = x
+        self.y = y
+        self.z = z
+        
+    def set_name(self, new_name: str) -> str:
+        self.name = new_name
+    
+    def get_x(self) -> None:
+        return self.x
+
+    def set_x(self, new_x: str) -> str:
+        self.x = new_x
+    
+    def get_x(self) -> None:
+        return self.x
+
+    def set_y(self, new_y: int) -> None:
+        self.y = new_y
+    
+    def get_y(self) -> int:
+        return self.y
+
+    def set_z(self, new_z: str) -> None:
+        self.z = new_z
+    
+    def get_z(self) -> str:
+        return self.z
+
+    def __str__(self) -> str:
+        final_string = f"Class_Name object:\n  name: {self.name}\n  x: {self.x}\n  y: {self.y}\n  z: {self.z}"
+        return final_string
+
+
+I would explain the reasons for doing some of these things as well.
+
+
+If we wanted to do builder pattern, then we could leave out the ability to assign the value 
+at initialization and have it need to explicitly use the functions to set the variable values
+
+
+
+When we got to architecture, we could do something more like this:
+
+Architecture type: N-Tier Architecture
+
+Pros: 
+Separation of concerns makes it easier to understand
+Layers can be tested in isolation, which speeds up debugging
+
+Cons:
+Increased complexity overhead
+Higher latency
+
+Best used for:
+Enterprise applications with multiple users, complex business logic, and the need for scalability, security, and maintainability.
+examples: e-commerce, large scale web services
+
+Should not be used for:
+small/simple applications
+rapidly changing projects 
+low budget endeavors 
+
+
+Description:
+N-tier architecture is an architecture that splits up processes into separate layers,
+for example, 
+the first layer may be the user-end application
+the second layer may recieve API calls from the user application
+the third layer may process the user API call, this is where the business logic might start appearing
+the fourth layer may send a request to the database layer
+the fith layer may house the database, and process requests from the fourth layer
+
+Each layer communicates with the layer on either side of it,
