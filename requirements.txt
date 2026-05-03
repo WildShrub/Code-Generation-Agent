@@ -1,0 +1,8 @@
+langchain
+langchain-core
+langchain_community
+langchain_ollama 
+faiss-cpu
+
+requests
+pyyaml

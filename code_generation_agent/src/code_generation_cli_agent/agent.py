@@ -8,7 +8,7 @@ from .prompt_manager import PromptManager
 from .tools import Tools
 from .new_file_name_so_it_works import AgentConfig, RunResult
 from .utils import strip_code_fences
-from  rag.rag import get_context
+#from  rag.rag import get_context
 
 class Agent:
     def __init__(self, cfg: AgentConfig):

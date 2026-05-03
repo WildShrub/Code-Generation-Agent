@@ -43,11 +43,11 @@ def format_docs(docs: List[Document]) -> str:
 
 
 def main() -> None:
-    dataset_root = Path("dataset").resolve()
-    paths = Paths(index_dir=dataset_root / "rag" / "rag_faiss_index")
+    rag_path = Path("src/code_generation_cli_agent/rag").resolve()
+    paths = Paths(index_dir=rag_path / "rag_faiss_index")
 
     if not paths.index_dir.exists():
-        raise SystemExit("Missing dataset/rag/rag_faiss_index. Run tools/build_faiss_rag.py first.")
+        raise SystemExit(f"Missing {paths}. Run rag/build_faiss_rag.py first.")
     #for figuring out which files are most applicable
     embed_model = os.environ.get("OLLAMA_EMBED_MODEL", "nomic-embed-text")
     embeddings = OllamaEmbeddings(model=embed_model)
@@ -58,6 +58,7 @@ def main() -> None:
     llm_temp = float(os.environ.get("OLLAMA_TEMPERATURE", "0.0"))
     llm = ChatOllama(model=llm_model, temperature=llm_temp)
 
+    prompt = "Is the color of the food in green eggs and ham steve's favorite color?"
     #the part that decides which documents are most relevant
     docs = vectordb.similarity_search(prompt, k=8)
     context = format_docs(docs)
@@ -76,11 +77,11 @@ def main() -> None:
     print(answer)
         
 def get_context(prompt: str) -> str:
-    dataset_root = Path("rag").resolve()
-    paths = Paths(index_dir=dataset_root / "rag_faiss_index")
+    rag_path = Path("src/code_generation_cli_agent/rag").resolve()
+    paths = Paths(index_dir=rag_path / "rag_faiss_index")
 
     if not paths.index_dir.exists():
-        raise SystemExit("Missing rag/rag_faiss_index. Run build_rag_index.py first.")
+        raise SystemExit(f"Missing {paths}. Run rag/build_faiss_rag.py first.")
     
     embed_model = os.environ.get("OLLAMA_EMBED_MODEL", "nomic-embed-text")
     embeddings = OllamaEmbeddings(model=embed_model)

@@ -1,0 +1,28 @@
+#from .rag.rag import get_context
+#from langchain_ollama import ChatOllama
+
+
+
+llm_model = os.environ.get("OLLAMA_MODEL", "devstral-small-2:24b-cloud")
+llm_temp = float(os.environ.get("OLLAMA_TEMPERATURE", "0.0"))
+llm = ChatOllama(model=llm_model, temperature=llm_temp)
+
+print("\n\nTesting rag...")
+print("cwd: ", os.getcwd())
+test_prompt = "Is the color of the food in green eggs and ham steve's favorite color?"
+print("prompt: ", test_prompt)
+context = get_context(test_prompt)
+new_prompt = f"""
+
+        Retrieved context:
+        {context}
+
+        Task:
+        {test_prompt}
+        """
+    #can probably just return the new prompt here to be used on the real thing
+resp = llm.invoke(new_prompt)
+answer = resp.content if isinstance(resp.content, str) else str(resp.content)
+print("\n\nAnswer:", answer)
+if len(answer) == 0:
+    print("\n\nResponse not given\n\n")
