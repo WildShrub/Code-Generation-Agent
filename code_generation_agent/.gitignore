@@ -21,11 +21,17 @@ envs/
 *.swp
 *.swo
 
-# Project specific - Output folder (very important for your case)
+# Project specific - Output folder
 output/
 __output__/
 generated/
 *_generated/
+
+# rag index files
+rag_faiss_index/
+index.faiss
+index.pkl
+
 
 # Logs
 *.log
