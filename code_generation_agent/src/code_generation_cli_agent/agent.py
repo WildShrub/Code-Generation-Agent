@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+from pdb import run
 from typing import Any, Callable
+
+from prompt_toolkit import prompt
 
 from .llm import OllamaLLM
 from .prompt_manager import PromptManager
@@ -49,6 +52,43 @@ class Agent:
             return self._call_llm
 
         return RunnableLambda(self._call_llm).invoke
+    
+    def _clarification_phase(self, desc: str) -> str:
+        """Ask the user clarifying questions and return enriched description."""
+        run = self._multi_step_chain()
+
+        prompt = (
+            "You are a senior software engineer about to plan a project.\n"
+            "Given the following description, generate 3-5 targeted clarifying questions\n"
+            "about architecture, design patterns, and dependencies/libraries.\n"
+            "Ask ONLY questions whose answers would meaningfully change your implementation plan.\n"
+            "Output each question on its own numbered line. Nothing else.\n\n"
+            f"DESCRIPTION:\n{desc}"
+        )
+
+        questions_raw = run(prompt).strip()
+        if not questions_raw:
+            return desc  # graceful fallback — skip if LLM returns nothing
+
+        print("\n--- Clarification Phase ---")
+        print("Please answer the following questions before planning begins:\n")
+        print(questions_raw)
+        print()
+
+        answers = []
+        for line in questions_raw.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            answer = input(f"{line}\n> ").strip()
+            answers.append(f"{line}\n{answer}")
+
+        enriched = (
+            f"{desc}\n\n"
+            "Additional clarifications from user:\n" +
+            "\n\n".join(answers)
+        )
+        return enriched
 
     def create_multiple_files(self, desc: str, module_path: str) -> RunResult:
         """Create a program.
@@ -61,6 +101,9 @@ class Agent:
             5.1) potentially give revision instructions
             5.2) repeat
         """
+        # Clarification phase
+        desc = self._clarification_phase(desc)
+        
         run = self._multi_step_chain()
 
         # Plan
