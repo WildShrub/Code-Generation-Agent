@@ -12,6 +12,35 @@ from langchain_ollama import ChatOllama
 DEFAULT_MODEL = "devstral-small-2:24b-cloud"   #"gemma4:e2b" #
 DEFAULT_HOST = "http://localhost:11434"
 VERSION = "0.5.0"
+
+
+def test_rag() ->None:
+    llm_model = os.environ.get("OLLAMA_MODEL", "gemma4:e2b")
+    llm_temp = float(os.environ.get("OLLAMA_TEMPERATURE", "0.0"))
+    llm = ChatOllama(model=llm_model, temperature=llm_temp)
+
+    print("\n\nTesting rag...")
+    print("cwd: ", os.getcwd())
+    test_prompt = "Is the color of the food in green eggs and ham steve's favorite color?"
+    print("prompt: ", test_prompt)
+    context = get_context(test_prompt)
+    new_prompt = f"""
+
+            Retrieved context:
+            {context}
+
+            Task:
+            {test_prompt}
+    """
+        #can probably just return the new prompt here to be used on the real thing
+    resp = llm.invoke(new_prompt)
+    answer = resp.content if isinstance(resp.content, str) else str(resp.content)
+    print("\n\nAnswer:", answer)
+    if len(answer) == 0:
+        print("\n\nResponse not given\n\n")
+
+
+
 project_name = "rag_test1"
 model = os.environ.get("OLLAMA_MODEL", DEFAULT_MODEL)
 host = os.environ.get("OLLAMA_HOST", DEFAULT_HOST)
@@ -20,37 +49,9 @@ repo = generate_repo_name(sanitize_name(project_name))
 print(f"Repository: {repo}")
 
 
-
 print("current directory: ", Path(__file__).parent.resolve())
 print("current file: ", Path(__file__).resolve())
 print("cwd: ", os.getcwd())
-
-"""
-#all for testing
-llm_model = os.environ.get("OLLAMA_MODEL", "gemma4:e2b")
-llm_temp = float(os.environ.get("OLLAMA_TEMPERATURE", "0.0"))
-llm = ChatOllama(model=llm_model, temperature=llm_temp)
-
-print("\n\nTesting rag...")
-print("cwd: ", os.getcwd())
-test_prompt = "Is the color of the food in green eggs and ham steve's favorite color?"
-print("prompt: ", test_prompt)
-context = get_context(test_prompt)
-#new_prompt = f"""
-
-#        Retrieved context:
-#        {context}
-
-#        Task:
-#        {test_prompt}
-"""
-    #can probably just return the new prompt here to be used on the real thing
-resp = llm.invoke(new_prompt)
-answer = resp.content if isinstance(resp.content, str) else str(resp.content)
-print("\n\nAnswer:", answer)
-if len(answer) == 0:
-    print("\n\nResponse not given\n\n")
-"""
 
 module = 'src/'                             #Sets default module path if not provided
 print(f"Module: {module}")

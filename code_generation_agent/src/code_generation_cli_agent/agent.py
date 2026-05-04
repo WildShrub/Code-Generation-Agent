@@ -52,7 +52,6 @@ class Agent:
 
     def create_multiple_files(self, desc: str, module_path: str) -> RunResult:
         """Create a program.
-        
         Steps:
         1) Planning Agent: produce a plan
         2) Code Generation Agent: draft code
@@ -61,7 +60,6 @@ class Agent:
         5) Self-Review Agent: run tests
             5.1) potentially give revision instructions
             5.2) repeat
-        
         """
         run = self._multi_step_chain()
 
@@ -87,17 +85,19 @@ class Agent:
             unparsed_file_plan = unparsed_file_plan_list[i].split("$$$")   #separates file description from function stuff
             file_description = unparsed_file_plan.pop(0)
             function_plans_string = unparsed_file_plan[0]              #should be the only thing in that list
-            #file_path = f"{module_path}{file_name}"
 
             p2 =  build_single_file_prompt(file_name=file_name, file_description=file_description, function_plans=function_plans_string)
-            
+            rag_output = get_context(p2)
+            finished_prompt = p1.replace("<<<rag_output>>>", rag_output)
             # Draft code
-            self._log(p2)
-            draft_code_raw = run(p2)
+            self._log(finished_prompt)
+            draft_code_raw = run(finished_prompt)
             self._log(draft_code_raw)
             draft_code = strip_code_fences(draft_code_raw)
             if not draft_code.strip():
                 return RunResult(False, "Model returned empty module draft.")
+            
+            #print and ask for permission to write here
             self.tools.write(file_name, draft_code.rstrip() + "\n")
         return RunResult(True, f"Wrote modules: {file_name_list}")
 
