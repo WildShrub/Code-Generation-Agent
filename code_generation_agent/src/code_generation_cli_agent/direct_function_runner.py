@@ -9,18 +9,25 @@ import os
 from .rag.rag import get_context
 from langchain_ollama import ChatOllama
 
-DEFAULT_MODEL = "devstral-small-2:24b-cloud"
+DEFAULT_MODEL = "devstral-small-2:24b-cloud"   #"gemma4:e2b" #
 DEFAULT_HOST = "http://localhost:11434"
 VERSION = "0.5.0"
-project_name = "test1"
+project_name = "rag_test1"
 model = os.environ.get("OLLAMA_MODEL", DEFAULT_MODEL)
 host = os.environ.get("OLLAMA_HOST", DEFAULT_HOST)
 temperature = float(os.environ.get("OLLAMA_TEMPERATURE", "0.0"))
 repo = generate_repo_name(sanitize_name(project_name))
 print(f"Repository: {repo}")
 
+
+
+print("current directory: ", Path(__file__).parent.resolve())
+print("current file: ", Path(__file__).resolve())
+print("cwd: ", os.getcwd())
+
+"""
 #all for testing
-llm_model = os.environ.get("OLLAMA_MODEL", "devstral-small-2:24b-cloud")
+llm_model = os.environ.get("OLLAMA_MODEL", "gemma4:e2b")
 llm_temp = float(os.environ.get("OLLAMA_TEMPERATURE", "0.0"))
 llm = ChatOllama(model=llm_model, temperature=llm_temp)
 
@@ -29,24 +36,21 @@ print("cwd: ", os.getcwd())
 test_prompt = "Is the color of the food in green eggs and ham steve's favorite color?"
 print("prompt: ", test_prompt)
 context = get_context(test_prompt)
-new_prompt = f"""
+#new_prompt = f"""
 
-        Retrieved context:
-        {context}
+#        Retrieved context:
+#        {context}
 
-        Task:
-        {test_prompt}
-        """
+#        Task:
+#        {test_prompt}
+"""
     #can probably just return the new prompt here to be used on the real thing
 resp = llm.invoke(new_prompt)
 answer = resp.content if isinstance(resp.content, str) else str(resp.content)
 print("\n\nAnswer:", answer)
 if len(answer) == 0:
     print("\n\nResponse not given\n\n")
-
-
-
-
+"""
 
 module = 'src/'                             #Sets default module path if not provided
 print(f"Module: {module}")
@@ -64,11 +68,11 @@ cfg = AgentConfig(
     )
 
 agent = Agent(cfg)
+hard_test_prompt = "Create a class called bucket with the variables label, has_handle, contents, and amount_filled. Then create a class called Bucket_user with the variables name and current_bucket (which will be of the Bucket type), it will also have a function that pours the contents of the bucket its holding. The bucket that its holding should have its amount_filled variable set to 0.0 when this occurs. Then create an instance of the Bucket_holder class where name is paul, and current_bucket is an instance of the Bucket class called water_pail where label is water pail, has_handle is a boolean set to true, contents is water, and amount_filled=0.25. finally, print the amount filled of water_pail before and after the Bucket_user pours it. Use best coding practices where applicable. Use 3 separate files."
+#description = "Create a create a blackjack program using separation of concerns. Use at least 2 files"
 
-description = "Create a create a blackjack program using separation of concerns. Use at least 2 files"
 
-
-agent.create_multiple_files(description, module)
+agent.create_multiple_files(desc=hard_test_prompt, module_path=module)
 print("ALL DONE!")
 
 
