@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Callable
+from datetime import datetime
 
 from .llm import OllamaLLM
 from .prompt_manager import PromptManager
@@ -76,9 +77,8 @@ class Agent:
         self._log(plan)
         unparsed_file_plan_list = plan.split("$$$$")
         file_name_list = unparsed_file_plan_list.pop(0).split(", ")
-        #print(file_name_list)
-        #print(len(file_name_list))
-        #print(len(unparsed_file_plan_list))
+
+        file_list = {}
         for i in range(len(unparsed_file_plan_list)):
             print("i = ",i)
             file_name = file_name_list[i].replace("\n", "") #sanitizing the file name because the last one tends to have \n at the end of it.
@@ -88,7 +88,7 @@ class Agent:
 
             p2 =  build_single_file_prompt(file_name=file_name, file_description=file_description, function_plans=function_plans_string)
             rag_output = get_context(p2)
-            finished_prompt = p1.replace("<<<rag_output>>>", rag_output)
+            finished_prompt = p2.replace("<<<rag_output>>>", rag_output)
             # Draft code
             self._log(finished_prompt)
             draft_code_raw = run(finished_prompt)
@@ -97,8 +97,21 @@ class Agent:
             if not draft_code.strip():
                 return RunResult(False, "Model returned empty module draft.")
             
-            #print and ask for permission to write here
-            self.tools.write(file_name, draft_code.rstrip() + "\n")
+            #add to file dictionary for easier processing
+            file_list[file_name] = draft_code.rstrip() + "\n"
+            
+        #print and ask for permission to write    
+        all_file_drafts = ""
+        for key, value in file_list.items():
+            all_file_drafts += key + ":\n------------------\n" + value
+        print(all_file_drafts,"\n\n")
+
+        approval = input("Do you approve of the generated code?\n(Please answer \"y\" or \"n\")\n")
+        if approval == "y":
+            for key, value in file_list.items():
+                self.tools.write(key, value.rstrip() + "\n")
+        else:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            self._log("DRAFT " + timestamp +"\n"+ all_file_drafts)
+            
         return RunResult(True, f"Wrote modules: {file_name_list}")
-
-
