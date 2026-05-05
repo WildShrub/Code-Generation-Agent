@@ -49,9 +49,9 @@ repo = generate_repo_name(sanitize_name(project_name))
 print(f"Repository: {repo}")
 
 
-print("current directory: ", Path(__file__).parent.resolve())
-print("current file: ", Path(__file__).resolve())
-print("cwd: ", os.getcwd())
+#print("current directory: ", Path(__file__).parent.resolve())
+#print("current file: ", Path(__file__).resolve())
+#print("cwd: ", os.getcwd())
 
 module = 'src/'                             #Sets default module path if not provided
 print(f"Module: {module}")

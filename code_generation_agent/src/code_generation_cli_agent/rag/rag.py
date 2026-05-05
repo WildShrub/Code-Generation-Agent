@@ -78,9 +78,9 @@ def main() -> None:
         
 def get_context(prompt: str) -> str:
     print("inside rag.py")
-    print("current directory: ", Path(__file__).parent.resolve())
-    print("current file: ", Path(__file__).resolve())
-    print("cwd: ", os.getcwd())
+    #print("current directory: ", Path(__file__).parent.resolve())
+    #print("current file: ", Path(__file__).resolve())
+    #print("cwd: ", os.getcwd())
     rag_path = Path("src/code_generation_cli_agent/rag").resolve()
     paths = Paths(index_dir=rag_path / "rag_faiss_index")
 
