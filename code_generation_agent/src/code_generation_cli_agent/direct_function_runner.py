@@ -2,7 +2,8 @@ from __future__ import annotations
 from .agent import Agent
 from .new_file_name_so_it_works import AgentConfig, RunResult
 
-from .cli import generate_repo_name, ensure_repo_path, sanitize_name
+#from .cli import generate_repo_name, ensure_repo_path, sanitize_name
+from .utils import generate_repo_name, ensure_repo_path, sanitize_name
 from pathlib import Path
 import os
 
@@ -48,10 +49,6 @@ temperature = float(os.environ.get("OLLAMA_TEMPERATURE", "0.0"))
 repo = generate_repo_name(sanitize_name(project_name))
 print(f"Repository: {repo}")
 
-
-#print("current directory: ", Path(__file__).parent.resolve())
-#print("current file: ", Path(__file__).resolve())
-#print("cwd: ", os.getcwd())
 
 module = 'src/'                             #Sets default module path if not provided
 print(f"Module: {module}")
