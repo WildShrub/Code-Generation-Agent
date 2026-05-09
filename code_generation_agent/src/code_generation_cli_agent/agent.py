@@ -5,10 +5,10 @@ from pdb import run
 from typing import Any, Callable
 from datetime import datetime
 
-from prompt_toolkit import prompt
+#from prompt_toolkit import prompt
 
 from .llm import OllamaLLM
-from .prompt_manager import PromptManager
+#from .prompt_manager import PromptManager
 from .tools import Tools
 from .new_file_name_so_it_works import AgentConfig, RunResult
 from .utils import strip_code_fences
@@ -20,13 +20,14 @@ class Agent:
         self.cfg = cfg
         self.repo = Path(cfg.repo).resolve()
         self.tools = Tools(self.repo)
-        self.prompt_manager = PromptManager()
+        self.prompt_dir = Path(__file__).parent.resolve() / "prompts"
+        #self.prompt_manager = PromptManager()
         
         # Default prompt variants
-        self.planning_variant = 'default'
-        self.code_gen_variant = 'default'
-        self.readme_gen_variant = 'default'
-        self.multi_file_gen_variant = 'default'
+        #self.planning_variant = 'default'
+        #self.code_gen_variant = 'default'
+        #self.readme_gen_variant = 'default'
+        #self.multi_file_gen_variant = 'default'
         self.log_number = 1
 
     def _log(self, message: Any) -> None:

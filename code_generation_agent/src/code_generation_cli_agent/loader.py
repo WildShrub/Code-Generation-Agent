@@ -30,7 +30,3 @@ def build_single_file_prompt(file_name: str, file_description: str, function_pla
     finished_prompt = modified_prompt_2.replace("<<<function_plans_string>>>", function_plans)
     return finished_prompt
 
-
-#print("current directory: ", Path(__file__).parent.resolve())
-#print("current file: ", Path(__file__).resolve())
-#print("cwd: ", os.getcwd())

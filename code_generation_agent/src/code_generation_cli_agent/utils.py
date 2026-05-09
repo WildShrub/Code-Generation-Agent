@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-
+from datetime import datetime
 
 def ensure_repo_path(repo: str) -> Path:
     p = Path(repo).resolve()
@@ -31,3 +31,16 @@ def strip_code_fences(text: str) -> str:
         lines = lines[:-1]
 
     return "\n".join(lines).strip()
+
+
+def sanitize_name(text: str) -> str:
+    """Convert text to a valid directory/file name."""
+    text = re.sub(r'[^\w\s-]', '', text.lower())
+    text = re.sub(r'[\s-]+', '_', text)
+    return text.strip('_')
+
+
+def generate_repo_name(project_name: str) -> str:
+    """Generate repository path with timestamp."""
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    return f"output/{project_name}_{timestamp}"
