@@ -27,6 +27,7 @@ class Tools:
         p.write_text(content, encoding="utf-8")
 
     def run(self, cmd: str, timeout_s: int = 600) -> Tuple[bool, str]:
+        print(self.repo_path)
         proc = subprocess.run(
             cmd,
             cwd=self.repo_path,
@@ -35,6 +36,7 @@ class Tools:
             text=True,
             timeout=timeout_s,
         )
+        print(self.repo_path)
         out = (proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")
         out = (out.strip() or "[NO OUTPUT]")
         return proc.returncode == 0, out[:20000]

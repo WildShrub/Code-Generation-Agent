@@ -13,7 +13,7 @@ Rules:
 Best Practices:
 <<<rag_output>>>
 
- TARGET MODULE PATH: 
+TARGET MODULE PATH: 
 <<<file_name>>>
 
 PLAN:
@@ -21,3 +21,5 @@ PLAN:
 
 FUNCTION SIGNITURES AND DESCRIPTIONS:
 <<<function_plans_string>>>
+
+

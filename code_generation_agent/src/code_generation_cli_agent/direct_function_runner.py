@@ -42,7 +42,7 @@ def test_rag() ->None:
 
 
 
-project_name = "rag_test1"
+project_name = "pytest_test1"
 model = os.environ.get("OLLAMA_MODEL", DEFAULT_MODEL)
 host = os.environ.get("OLLAMA_HOST", DEFAULT_HOST)
 temperature = float(os.environ.get("OLLAMA_TEMPERATURE", "0.0"))
@@ -50,12 +50,15 @@ repo = generate_repo_name(sanitize_name(project_name))
 print(f"Repository: {repo}")
 
 
-module = 'src/'                             #Sets default module path if not provided
+module = ''                    #src\\         #Sets default module path if not provided
 print(f"Module: {module}")
 repo_path = Path(repo)
 if not repo_path.exists():
     repo_path.mkdir(parents=True, exist_ok=True)
+log_path = repo_path / "logs"
+
 ensure_repo_path(repo)
+#I'm not ensuring logs path because there are many of them and I don't want it to get confused
 
 cfg = AgentConfig(
         repo=repo,
@@ -72,5 +75,3 @@ hard_test_prompt = "Create a class called bucket with the variables label, has_h
 
 agent.create_multiple_files(desc=hard_test_prompt, module_path=module)
 print("ALL DONE!")
-
-

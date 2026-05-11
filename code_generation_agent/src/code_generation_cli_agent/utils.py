@@ -22,10 +22,14 @@ def strip_code_fences(text: str) -> str:
         return ""
 
     s = text.strip()
-    s = re.sub(r"^\s*Here is the code:\s*", "", s, flags=re.IGNORECASE)
+    #s = re.sub(r"^\s*Here is the code:\s*", "", s, flags=re.IGNORECASE)
+    #s = re.sub(r"```python", "", s)
+    #s = re.sub(r"```", "", s)
+    s = str.replace(s, "```python", "")
+    s = str.replace(s, "```", "")
     lines = s.splitlines()
 
-    if lines and lines[0].lstrip().startswith("```"):
+    if lines and lines[0].lstrip().startswith("```python"):
         lines = lines[1:]
     if lines and lines[-1].lstrip().startswith("```"):
         lines = lines[:-1]
