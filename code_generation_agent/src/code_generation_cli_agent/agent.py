@@ -94,7 +94,7 @@ class Agent:
         )
         return enriched
     
-    def _test_gen_phase(self, file_name: str, single_file_plans: str) -> str:   #might want to return a dictionary with the tests
+    def _test_gen_phase(self, file_name: str, single_file_plans: str) -> str:   #might want to return a dictionary with the tests 
         """Create tests based off of the plans made by the planning phase and clarification phase, return those tests."""
         run = self._multi_step_chain()
         test_gen_prompt_path = self.prompt_dir / "test_generation_prompt.md"
@@ -211,7 +211,7 @@ class Agent:
             #TODO: get rid of the the module path part of the prompts and also the prompt builder
             test_file_path = str("test_" + key)
             test_results_path =  f"test_results/{str.replace(f"{key}", ".py", "")}_results.md"
-            print(f"running: pytest -v --junit-xml={test_results_path} {test_file_path}")
-            self.tools.run(f"pytest -v --junit-xml={test_results_path} {test_file_path}")
+            print(f"running: pytest -v --tb=line --junit-xml={test_results_path} {test_file_path}")
+            self.tools.run(f"pytest -v --tb=line --junit-xml={test_results_path} {test_file_path}")
             
         return RunResult(True, f"Wrote modules: {file_name_list}")
