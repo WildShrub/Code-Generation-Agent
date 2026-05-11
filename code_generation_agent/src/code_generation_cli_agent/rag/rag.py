@@ -33,12 +33,10 @@ class Paths:
 def format_docs(docs: List[Document]) -> str:
     parts: List[str] = []
     for i, d in enumerate(docs, start=1):
-        src = d.metadata.get("source", "unknown")
-        typ = d.metadata.get("type", "unknown")
         text = d.page_content.strip()
         if len(text) > 1400:
             text = text[:1400] + "\n...[truncated]..."
-        parts.append(f"[{i}] type={typ} source={src}\n{text}")
+        parts.append(f"[{i}] {text}")
     return "\n\n".join(parts)
 
 
@@ -89,7 +87,7 @@ def get_context(prompt: str) -> str:
     vectordb = FAISS.load_local(str(paths.index_dir), embeddings, allow_dangerous_deserialization=True)
 
     #the part that decides which documents are most relevant
-    docs = vectordb.similarity_search(prompt, k=8)
+    docs = vectordb.similarity_search(prompt, k=3)
     context = format_docs(docs)
     
     return context

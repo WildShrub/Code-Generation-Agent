@@ -12,6 +12,7 @@ def build_multi_file_planning_prompt(module_path: str, description: str) -> str:
     prompts_dir = current_dir / "prompts"
     formatting_file_path = prompts_dir / "multi_file_planning_response_format.md"
     system_prompt_file_path = prompts_dir / "multi_file_planning_system_prompt.md"
+
     formatting = read(formatting_file_path)
     system_prompt = read(system_prompt_file_path)
     modified_prompt_1 = system_prompt.replace("<<<FORMATING>>>", formatting)

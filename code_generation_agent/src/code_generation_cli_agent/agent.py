@@ -4,6 +4,7 @@ from pathlib import Path
 from pdb import run
 from typing import Any, Callable
 from datetime import datetime
+import os
 
 #from prompt_toolkit import prompt
 
@@ -12,7 +13,7 @@ from .llm import OllamaLLM
 from .tools import Tools
 from .new_file_name_so_it_works import AgentConfig, RunResult
 from .utils import strip_code_fences
-from .loader import build_multi_file_planning_prompt, build_single_file_prompt
+from .loader import build_multi_file_planning_prompt, build_single_file_prompt, read
 from  .rag.rag import get_context
 
 class Agent:
@@ -31,9 +32,10 @@ class Agent:
         self.log_number = 1
 
     def _log(self, message: Any) -> None:
+        #TODO: add the name of the log as a parameter and add a default to it so that I don't need to change all of them right away
         if self.cfg.verbose:
             print(message)
-        name_of_log = f"log{self.log_number}.md"
+        name_of_log = f"logs\\log{self.log_number}.md"
         self.tools.write(name_of_log, message)
         self.log_number += 1
 
@@ -91,6 +93,41 @@ class Agent:
             "\n\n".join(answers)
         )
         return enriched
+    
+    def _test_gen_phase(self, file_name: str, single_file_plans: str) -> str:   #might want to return a dictionary with the tests
+        """Create tests based off of the plans made by the planning phase and clarification phase, return those tests."""
+        run = self._multi_step_chain()
+        test_gen_prompt_path = self.prompt_dir / "test_generation_prompt.md"
+        #TODO: Either add this part to loader.py or make it self.tools.read(test_gen_prompt_path) and get rid of the read import
+        prompt = read(test_gen_prompt_path)
+        finished_prompt = prompt.replace("<<<plans>>>", single_file_plans)
+        #In the future I should add rag to this phase right here
+        self._log(finished_prompt)
+        tests = run(finished_prompt).strip()
+        if not tests:
+            self._log("No tests returned")
+            return single_file_plans  # graceful fallback — skip if LLM returns nothing
+        self._log(tests)
+        
+        print(tests,"\n\n")
+        approval = input("Do you approve of the generated tests?\n(Please answer \"y\" or \"n\")\n")
+        #TODO: put back in the input function
+        #approval = "y"
+        if approval == "y":
+            #TODO: add the ensure function from utils so that I can have a separate folder for test files
+            self.tools.write("test_" + file_name, strip_code_fences(tests).rstrip() + "\n")
+        else:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            self._log("DRAFT " + timestamp +"\n"+ tests)
+
+        enriched = (
+            f"{single_file_plans}\n\n"
+            "The program must pass these tests:\n" +
+            "\n\n".join(strip_code_fences(tests))
+        )
+
+        return enriched
+
 
     def create_multiple_files(self, desc: str, module_path: str) -> RunResult:
         """Create a program.
@@ -103,6 +140,9 @@ class Agent:
             5.1) potentially give revision instructions
             5.2) repeat
         """
+        print("current directory: ", Path(__file__).parent.resolve())
+        print("current file: ", Path(__file__).resolve())
+        print("cwd: ", os.getcwd())
         # Clarification phase
         desc = self._clarification_phase(desc)
         
@@ -121,7 +161,9 @@ class Agent:
         self._log(plan)
         unparsed_file_plan_list = plan.split("$$$$")
         file_name_list = unparsed_file_plan_list.pop(0).split(", ")
-
+        
+        self.tools.run("touch __init__.py")
+        
         file_list = {}
         for i in range(len(unparsed_file_plan_list)):
             print("i = ",i)
@@ -129,10 +171,15 @@ class Agent:
             unparsed_file_plan = unparsed_file_plan_list[i].split("$$$")   #separates file description from function stuff
             file_description = unparsed_file_plan.pop(0)
             function_plans_string = unparsed_file_plan[0]              #should be the only thing in that list
-
-            p2 =  build_single_file_prompt(file_name=file_name, file_description=file_description, function_plans=function_plans_string)
+            
+            #TODO: make test phase optional (involves adding a cli)
+            function_plans_and_tests = self._test_gen_phase(file_name=file_name, single_file_plans=function_plans_string)
+            #TODO: add function tests to build_single_file_prompt
+            
+            p2 =  build_single_file_prompt(file_name=file_name, file_description=file_description, function_plans=function_plans_and_tests)
             rag_output = get_context(p2)
             finished_prompt = p2.replace("<<<rag_output>>>", rag_output)
+
             # Draft code
             self._log(finished_prompt)
             draft_code_raw = run(finished_prompt)
@@ -153,9 +200,18 @@ class Agent:
         approval = input("Do you approve of the generated code?\n(Please answer \"y\" or \"n\")\n")
         if approval == "y":
             for key, value in file_list.items():
-                self.tools.write(key, value.rstrip() + "\n")
+                print("key : ", key)
+                self.tools.write(self.repo / key, value.rstrip() + "\n")
         else:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             self._log("DRAFT " + timestamp +"\n"+ all_file_drafts)
+
+
+        for key, value in file_list.items():
+            #TODO: get rid of the the module path part of the prompts and also the prompt builder
+            test_file_path = str("test_" + key)
+            test_results_path =  f"test_results/{str.replace(f"{key}", ".py", "")}_results.md"
+            print(f"running: pytest -v --junit-xml={test_results_path} {test_file_path}")
+            self.tools.run(f"pytest -v --junit-xml={test_results_path} {test_file_path}")
             
         return RunResult(True, f"Wrote modules: {file_name_list}")
