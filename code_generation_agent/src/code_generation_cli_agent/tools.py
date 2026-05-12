@@ -39,10 +39,6 @@ class Tools:
         print(self.repo_path)
         out = (proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")
         out = (out.strip() or "[NO OUTPUT]")
-        # Sanitize full paths to relative paths
-        #out = out.replace(str(self.repo_path), ".")
-        #out = out.replace(str(self.repo_path.parent), ".")
-        #out = out.replace(str(self.repo_path.parent.parent), ".")
         return proc.returncode == 0, out[:20000]
 
     def git_commit(self, message: str) -> Tuple[bool, str]:

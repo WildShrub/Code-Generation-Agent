@@ -7,10 +7,10 @@ from datetime import datetime
 import os
 import xml.etree.ElementTree as ET
 
-#from prompt_toolkit import prompt
+
 
 from .llm import OllamaLLM
-#from .prompt_manager import PromptManager
+
 from .tools import Tools
 from .new_file_name_so_it_works import AgentConfig, RunResult
 from .utils import strip_code_fences
@@ -23,17 +23,11 @@ class Agent:
         self.repo = Path(cfg.repo).resolve()
         self.tools = Tools(self.repo)
         self.prompt_dir = Path(__file__).parent.resolve() / "prompts"
-        #self.prompt_manager = PromptManager()
-        
-        # Default prompt variants
-        #self.planning_variant = 'default'
-        #self.code_gen_variant = 'default'
-        #self.readme_gen_variant = 'default'
-        #self.multi_file_gen_variant = 'default'
+
         self.log_number = 1
 
     def _log(self, message: Any) -> None:
-        #TODO: add the name of the log as a parameter and add a default to it so that I don't need to change all of them right away
+
         if self.cfg.verbose:
             print(message)
         name_of_log = f"logs\\log{self.log_number}.md"
@@ -95,14 +89,13 @@ class Agent:
         )
         return enriched
     
-    def _test_gen_phase(self, file_name: str, single_file_plans: str) -> str:   #might want to return a dictionary with the tests 
+    def _test_gen_phase(self, file_name: str, single_file_plans: str) -> str:   
         """Create tests based off of the plans made by the planning phase and clarification phase, return those tests."""
         run = self._multi_step_chain()
         test_gen_prompt_path = self.prompt_dir / "test_generation_prompt.md"
-        #TODO: Either add this part to loader.py or make it self.tools.read(test_gen_prompt_path) and get rid of the read import
         prompt = read(test_gen_prompt_path)
         finished_prompt = prompt.replace("<<<plans>>>", single_file_plans)
-        #In the future I should add rag to this phase right here
+
         self._log(finished_prompt)
         tests = run(finished_prompt).strip()
         if not tests:
@@ -111,11 +104,8 @@ class Agent:
         self._log(tests)
         
         print(tests,"\n\n")
-        #approval = input("Do you approve of the generated tests?\n(Please answer \"y\" or \"n\")\n")
-        #TODO: put back in the input function
-        approval = "y"
+        approval = input("Do you approve of the generated tests?\n(Please answer \"y\" or \"n\")\n")
         if approval == "y":
-            #TODO: add the ensure function from utils so that I can have a separate folder for test files
             self.tools.write("test_" + file_name, strip_code_fences(tests).rstrip() + "\n")
         else:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -223,7 +213,7 @@ class Agent:
         unparsed_file_plan_list = plan.split("$$$$")
         file_name_list = unparsed_file_plan_list.pop(0).split(", ")
         
-        #yself.tools.run("touch __init__.py")
+        
         
         file_list = {}
         for i in range(len(unparsed_file_plan_list)):
@@ -233,7 +223,6 @@ class Agent:
             file_description = unparsed_file_plan.pop(0)
             function_plans_string = unparsed_file_plan[0]              #should be the only thing in that list
             
-            #TODO: make test phase optional (involves adding a cli)
             function_plans_and_tests = self._test_gen_phase(file_name=file_name, single_file_plans=function_plans_string)
             
             p2 =  build_single_file_prompt(file_name=file_name, file_description=file_description, function_plans=function_plans_and_tests)
@@ -269,7 +258,6 @@ class Agent:
             self._log("DRAFT " + timestamp +"\n"+ all_file_drafts)
 
         for key, value in file_list.items():
-            #TODO: get rid of the the module path part of the prompts and also the prompt builder
             test_file_path = str("test_" + key)
             test_results_path =  f"test_results/{str.replace(f"{key}", ".py", "")}_results.md"
 
