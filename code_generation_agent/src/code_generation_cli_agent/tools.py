@@ -3,7 +3,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 from typing import Tuple
-
+import re
 
 class Tools:
     def __init__(self, repo_path: Path):
@@ -39,6 +39,10 @@ class Tools:
         print(self.repo_path)
         out = (proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")
         out = (out.strip() or "[NO OUTPUT]")
+        # Sanitize full paths to relative paths
+        #out = out.replace(str(self.repo_path), ".")
+        #out = out.replace(str(self.repo_path.parent), ".")
+        #out = out.replace(str(self.repo_path.parent.parent), ".")
         return proc.returncode == 0, out[:20000]
 
     def git_commit(self, message: str) -> Tuple[bool, str]:
@@ -47,6 +51,16 @@ class Tools:
             return False, out1
         safe_msg = message.replace('"', "'")
         return self.run(f'git commit -m "{safe_msg}"')
+    
+    def strip_file_paths(self, rel_path: str) -> None:
+        "rewrites a file to not include any file paths"
+        text = self.read(rel_path=rel_path)
+        pattern = r'([A-Za-z]:\\[^\s]+|\/[^\s]+)'
+        cleaned_text = re.sub(pattern,lambda m: Path(m.group(0)).name,text)
+        self.write(rel_path=rel_path, content=cleaned_text)
 
     def git_push(self) -> Tuple[bool, str]:
         return self.run("git push")
+
+
+

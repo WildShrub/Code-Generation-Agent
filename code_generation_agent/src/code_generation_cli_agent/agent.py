@@ -5,6 +5,7 @@ from pdb import run
 from typing import Any, Callable
 from datetime import datetime
 import os
+import xml.etree.ElementTree as ET
 
 #from prompt_toolkit import prompt
 
@@ -110,9 +111,9 @@ class Agent:
         self._log(tests)
         
         print(tests,"\n\n")
-        approval = input("Do you approve of the generated tests?\n(Please answer \"y\" or \"n\")\n")
+        #approval = input("Do you approve of the generated tests?\n(Please answer \"y\" or \"n\")\n")
         #TODO: put back in the input function
-        #approval = "y"
+        approval = "y"
         if approval == "y":
             #TODO: add the ensure function from utils so that I can have a separate folder for test files
             self.tools.write("test_" + file_name, strip_code_fences(tests).rstrip() + "\n")
@@ -127,6 +128,66 @@ class Agent:
         )
 
         return enriched
+    
+    def _parse_test_results(self, xml_text: str) -> tuple[bool, str]:
+        if not xml_text:
+            return False, "No test results available."
+        try:
+            root = ET.fromstring(xml_text)
+        except ET.ParseError as exc:
+            return False, f"Unable to parse test results XML: {exc}"
+
+        problems: list[str] = []
+        for testcase in root.findall('.//testcase'):
+            name = testcase.get('name', '<unknown>')
+            for failure in testcase.findall('failure'):
+                message = failure.get('message') or (failure.text or '').strip()
+                problems.append(f"FAIL {name}: {message}".strip())
+            for error in testcase.findall('error'):
+                message = error.get('message') or (error.text or '').strip()
+                problems.append(f"ERROR {name}: {message}".strip())
+
+        return len(problems) > 0, '\n'.join(problems)
+
+    def _build_self_review_prompt(self, module_file: str, module_source: str, test_file: str, test_results: str) -> str:
+        prompt_template = read(self.prompt_dir / 'self_review_prompt.md')
+        return (
+            prompt_template
+            .replace('<<<module_file>>>', module_file)
+            .replace('<<<module_code>>>', module_source)
+            .replace('<<<tests>>>', test_file)
+            .replace('<<<test_results>>>', test_results)
+        )
+
+    def _self_review_phase(self, module_file: str, test_file: str, results_path: str) -> bool:
+        self.tools.strip_file_paths(results_path)
+        xml_text = self.tools.read(results_path)
+        failed, summary = self._parse_test_results(xml_text)
+        if not failed:
+            return True
+
+        module_source = self.tools.read(module_file)
+        if not module_source:
+            self._log(f"SELF REVIEW FAILED: could not read module file {module_file}")
+            return False
+
+        test_source = self.tools.read(test_file)
+        if not test_source:
+            self._log(f"SELF REVIEW FAILED: could not read test file {test_file}")
+            return False
+
+        prompt = self._build_self_review_prompt(module_file, module_source, test_source, summary)
+        self._log('SELF REVIEW PROMPT:\n' + prompt)
+        revision_raw = self._call_llm(prompt)
+        self._log('SELF REVIEW RESPONSE:\n' + revision_raw)
+
+        revised_code = strip_code_fences(revision_raw)
+        if not revised_code.strip():
+            self._log(f"SELF REVIEW FAILED: LLM returned empty revision for {module_file}")
+            return False
+
+        self.tools.write(module_file, revised_code.rstrip() + '\n')
+        return True
 
 
     def create_multiple_files(self, desc: str, module_path: str) -> RunResult:
@@ -162,7 +223,7 @@ class Agent:
         unparsed_file_plan_list = plan.split("$$$$")
         file_name_list = unparsed_file_plan_list.pop(0).split(", ")
         
-        self.tools.run("touch __init__.py")
+        #yself.tools.run("touch __init__.py")
         
         file_list = {}
         for i in range(len(unparsed_file_plan_list)):
@@ -174,7 +235,6 @@ class Agent:
             
             #TODO: make test phase optional (involves adding a cli)
             function_plans_and_tests = self._test_gen_phase(file_name=file_name, single_file_plans=function_plans_string)
-            #TODO: add function tests to build_single_file_prompt
             
             p2 =  build_single_file_prompt(file_name=file_name, file_description=file_description, function_plans=function_plans_and_tests)
             rag_output = get_context(p2)
@@ -191,6 +251,8 @@ class Agent:
             #add to file dictionary for easier processing
             file_list[file_name] = draft_code.rstrip() + "\n"
             
+        
+
         #print and ask for permission to write    
         all_file_drafts = ""
         for key, value in file_list.items():
@@ -206,12 +268,28 @@ class Agent:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             self._log("DRAFT " + timestamp +"\n"+ all_file_drafts)
 
-
         for key, value in file_list.items():
             #TODO: get rid of the the module path part of the prompts and also the prompt builder
             test_file_path = str("test_" + key)
             test_results_path =  f"test_results/{str.replace(f"{key}", ".py", "")}_results.md"
-            print(f"running: pytest -v --tb=line --junit-xml={test_results_path} {test_file_path}")
-            self.tools.run(f"pytest -v --tb=line --junit-xml={test_results_path} {test_file_path}")
-            
+
+            attempts = 0
+            while attempts < 4:
+                print(f"running: pytest -v --junit-xml={test_results_path} {test_file_path}")
+                ok, _ = self.tools.run(f"pytest -v --junit-xml={test_results_path} {test_file_path}")
+                self.tools.strip_file_paths(test_results_path)
+
+                if ok:
+                    break
+
+                print(f"Self-review triggered for {key} based on test results.")
+                if not self._self_review_phase(key, test_file_path, test_results_path):
+                    print(f"Self-review failed for {key}; skipping further retries.")
+                    break
+
+                print(f"Re-running tests for {key} after self-review revision.")
+                attempts += 1
+            if attempts == 4:
+                print(f"Self-review retry exhausted for {key}.")
+
         return RunResult(True, f"Wrote modules: {file_name_list}")

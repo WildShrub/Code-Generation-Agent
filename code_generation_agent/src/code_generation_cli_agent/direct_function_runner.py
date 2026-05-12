@@ -10,7 +10,7 @@ import os
 from .rag.rag import get_context
 from langchain_ollama import ChatOllama
 
-DEFAULT_MODEL = "devstral-small-2:24b-cloud"   #"gemma4:e2b" #
+DEFAULT_MODEL = "devstral-2:123b-cloud"        #"devstral-small-2:24b-cloud"   #"gemma4:e2b" #
 DEFAULT_HOST = "http://localhost:11434"
 VERSION = "0.5.0"
 
@@ -71,7 +71,7 @@ cfg = AgentConfig(
 agent = Agent(cfg)
 hard_test_prompt = "Create a class called bucket with the variables label, has_handle, contents, and amount_filled. Then create a class called Bucket_user with the variables name and current_bucket (which will be of the Bucket type), it will also have a function that pours the contents of the bucket its holding. The bucket that its holding should have its amount_filled variable set to 0.0 when this occurs. Then create an instance of the Bucket_holder class where name is paul, and current_bucket is an instance of the Bucket class called water_pail where label is water pail, has_handle is a boolean set to true, contents is water, and amount_filled=0.25. finally, print the amount filled of water_pail before and after the Bucket_user pours it. Use best coding practices where applicable. Use 3 separate files."
 #description = "Create a create a blackjack program using separation of concerns. Use at least 2 files"
+test_test_prompt = "write a class that has a test file that will create this error: ImportError while importing test module "
 
-
-agent.create_multiple_files(desc=hard_test_prompt, module_path=module)
+agent.create_multiple_files(desc=hard_test_prompt, module_path=module)  #hard_test_prompt
 print("ALL DONE!")
